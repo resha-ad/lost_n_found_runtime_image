@@ -3,6 +3,8 @@ import 'package:hive/hive.dart';
 import 'package:lost_n_found/core/constants/hive_table_constant.dart';
 import 'package:lost_n_found/features/auth/data/models/auth_hive_model.dart';
 import 'package:lost_n_found/features/batch/data/models/batch_hive_model.dart';
+import 'package:lost_n_found/features/category/data/models/category_hive_model.dart';
+import 'package:lost_n_found/features/item/data/models/item_hive_model.dart';
 import 'package:path_provider/path_provider.dart';
 
 final hiveServiceProvider = Provider<HiveService>((ref) {
@@ -21,6 +23,7 @@ class HiveService {
     await _openBoxes();
     // insert dummy data
     await insertBatchDummyData();
+    await insertCategoryDummyData();
   }
 
   Future<void> insertBatchDummyData() async {
@@ -45,6 +48,45 @@ class HiveService {
     }
   }
 
+  Future<void> insertCategoryDummyData() async {
+    final categoryBox = Hive.box<CategoryHiveModel>(
+      HiveTableConstant.categoryTable,
+    );
+
+    if (categoryBox.isNotEmpty) {
+      return;
+    }
+
+    final dummyCategories = [
+      CategoryHiveModel(
+        name: 'Electronics',
+        description: 'Phones, laptops, tablets, etc.',
+      ),
+      CategoryHiveModel(name: 'Personal', description: 'Personal belongings'),
+      CategoryHiveModel(
+        name: 'Accessories',
+        description: 'Watches, jewelry, etc.',
+      ),
+      CategoryHiveModel(
+        name: 'Documents',
+        description: 'IDs, certificates, papers',
+      ),
+      CategoryHiveModel(
+        name: 'Keys',
+        description: 'House keys, car keys, etc.',
+      ),
+      CategoryHiveModel(
+        name: 'Bags',
+        description: 'Backpacks, handbags, wallets',
+      ),
+      CategoryHiveModel(name: 'Other', description: 'Miscellaneous items'),
+    ];
+
+    for (var category in dummyCategories) {
+      await categoryBox.put(category.categoryId, category);
+    }
+  }
+
   // Adapter register
   void _registerAdapter() {
     if (!Hive.isAdapterRegistered(HiveTableConstant.batchTypeId)) {
@@ -53,12 +95,20 @@ class HiveService {
     if (!Hive.isAdapterRegistered(HiveTableConstant.studentTypeId)) {
       Hive.registerAdapter(AuthHiveModelAdapter());
     }
+    if (!Hive.isAdapterRegistered(HiveTableConstant.iteTypeId)) {
+      Hive.registerAdapter(ItemHiveModelAdapter());
+    }
+    if (!Hive.isAdapterRegistered(HiveTableConstant.categoryTypeId)) {
+      Hive.registerAdapter(CategoryHiveModelAdapter());
+    }
   }
 
   // box open
   Future<void> _openBoxes() async {
     await Hive.openBox<BatchHiveModel>(HiveTableConstant.batchTable);
     await Hive.openBox<AuthHiveModel>(HiveTableConstant.studentTable);
+    await Hive.openBox<ItemHiveModel>(HiveTableConstant.itemTable);
+    await Hive.openBox<CategoryHiveModel>(HiveTableConstant.categoryTable);
   }
 
   // box close
@@ -144,5 +194,83 @@ class HiveService {
   // Delete user
   Future<void> deleteUser(String authId) async {
     await _authBox.delete(authId);
+  }
+
+  // ======================= Item Queries =========================
+
+  Box<ItemHiveModel> get _itemBox =>
+      Hive.box<ItemHiveModel>(HiveTableConstant.itemTable);
+
+  Future<ItemHiveModel> createItem(ItemHiveModel item) async {
+    await _itemBox.put(item.itemId, item);
+    return item;
+  }
+
+  List<ItemHiveModel> getAllItems() {
+    return _itemBox.values.toList();
+  }
+
+  ItemHiveModel? getItemById(String itemId) {
+    return _itemBox.get(itemId);
+  }
+
+  List<ItemHiveModel> getItemsByUser(String userId) {
+    return _itemBox.values.where((item) => item.reportedBy == userId).toList();
+  }
+
+  List<ItemHiveModel> getLostItems() {
+    return _itemBox.values.where((item) => item.type == 'lost').toList();
+  }
+
+  List<ItemHiveModel> getFoundItems() {
+    return _itemBox.values.where((item) => item.type == 'found').toList();
+  }
+
+  List<ItemHiveModel> getItemsByCategory(String categoryId) {
+    return _itemBox.values
+        .where((item) => item.categoryId == categoryId)
+        .toList();
+  }
+
+  Future<bool> updateItem(ItemHiveModel item) async {
+    if (_itemBox.containsKey(item.itemId)) {
+      await _itemBox.put(item.itemId, item);
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> deleteItem(String itemId) async {
+    await _itemBox.delete(itemId);
+  }
+
+  // ======================= Category Queries =========================
+
+  Box<CategoryHiveModel> get _categoryBox =>
+      Hive.box<CategoryHiveModel>(HiveTableConstant.categoryTable);
+
+  Future<CategoryHiveModel> createCategory(CategoryHiveModel category) async {
+    await _categoryBox.put(category.categoryId, category);
+    return category;
+  }
+
+  List<CategoryHiveModel> getAllCategories() {
+    return _categoryBox.values.toList();
+  }
+
+  CategoryHiveModel? getCategoryById(String categoryId) {
+    return _categoryBox.get(categoryId);
+  }
+
+  Future<bool> updateCategory(CategoryHiveModel category) async {
+    if (_categoryBox.containsKey(category.categoryId)) {
+      await _categoryBox.put(category.categoryId, category);
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> deleteCategory(String categoryId) async {
+    await _categoryBox.delete(categoryId);
   }
 }

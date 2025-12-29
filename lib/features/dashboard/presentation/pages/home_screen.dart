@@ -1,101 +1,109 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/theme_extensions.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../item/presentation/pages/item_detail_page.dart';
+import '../../../item/domain/entities/item_entity.dart';
+import '../../../item/presentation/view_model/item_viewmodel.dart';
+import '../../../item/presentation/state/item_state.dart';
+import '../../../category/domain/entities/category_entity.dart';
+import '../../../category/presentation/view_model/category_viewmodel.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _selectedFilter = 0; // 0: All, 1: Lost, 2: Found
-  String _selectedCategory = 'All';
+  String? _selectedCategoryId;
 
   final List<String> _filters = ['All', 'Lost', 'Found'];
-  // Later this data will come from backend/API
-  final List<Map<String, dynamic>> _categories = [
-    {'name': 'All', 'icon': Icons.apps_rounded},
-    {'name': 'Electronics', 'icon': Icons.devices_rounded},
-    {'name': 'Personal', 'icon': Icons.person_rounded},
-    {'name': 'Accessories', 'icon': Icons.watch_rounded},
-    {'name': 'Documents', 'icon': Icons.description_rounded},
-    {'name': 'Keys', 'icon': Icons.key_rounded},
-    {'name': 'Bags', 'icon': Icons.backpack_rounded},
-  ];
 
-  // Mock data for items
-  final List<Map<String, dynamic>> _items = [
-    {
-      'title': 'iPhone 14 Pro',
-      'location': 'Library, Block A',
-      'time': '2h ago',
-      'category': 'Electronics',
-      'isLost': true,
-      'image': null,
-    },
-    {
-      'title': 'Blue Backpack',
-      'location': 'Cafeteria',
-      'time': '3h ago',
-      'category': 'Bags',
-      'isLost': false,
-      'image': null,
-    },
-    {
-      'title': 'Car Keys',
-      'location': 'Parking Lot',
-      'time': '5h ago',
-      'category': 'Keys',
-      'isLost': true,
-      'image': null,
-    },
-    {
-      'title': 'Student ID Card',
-      'location': 'Block C, Room 201',
-      'time': '1d ago',
-      'category': 'Documents',
-      'isLost': false,
-      'image': null,
-    },
-    {
-      'title': 'Apple Watch',
-      'location': 'Gym',
-      'time': '1d ago',
-      'category': 'Accessories',
-      'isLost': true,
-      'image': null,
-    },
-    {
-      'title': 'Wallet',
-      'location': 'Block B, Ground Floor',
-      'time': '2d ago',
-      'category': 'Personal',
-      'isLost': false,
-      'image': null,
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(itemViewModelProvider.notifier).getAllItems();
+      ref.read(categoryViewModelProvider.notifier).getAllCategories();
+    });
+  }
 
-  List<Map<String, dynamic>> get _filteredItems {
-    return _items.where((item) {
-      // Filter by Lost/Found
-      if (_selectedFilter == 1 && !item['isLost']) return false;
-      if (_selectedFilter == 2 && item['isLost']) return false;
+  IconData _getCategoryIcon(String categoryName) {
+    switch (categoryName.toLowerCase()) {
+      case 'electronics':
+        return Icons.devices_rounded;
+      case 'personal':
+        return Icons.person_rounded;
+      case 'accessories':
+        return Icons.watch_rounded;
+      case 'documents':
+        return Icons.description_rounded;
+      case 'keys':
+        return Icons.key_rounded;
+      case 'bags':
+        return Icons.backpack_rounded;
+      default:
+        return Icons.inventory_2_rounded;
+    }
+  }
 
-      // Filter by category
-      if (_selectedCategory != 'All' && item['category'] != _selectedCategory) {
-        return false;
-      }
+  List<ItemEntity> _getFilteredItems(ItemState itemState) {
+    List<ItemEntity> items = itemState.items;
 
-      return true;
-    }).toList();
+    // Filter by Lost/Found
+    if (_selectedFilter == 1) {
+      items = items.where((item) => item.type == ItemType.lost).toList();
+    } else if (_selectedFilter == 2) {
+      items = items.where((item) => item.type == ItemType.found).toList();
+    }
+
+    // Filter by category
+    if (_selectedCategoryId != null) {
+      items = items
+          .where((item) => item.categoryId == _selectedCategoryId)
+          .toList();
+    }
+
+    return items;
+  }
+
+  String _getTimeAgo(DateTime? dateTime) {
+    if (dateTime == null) return '';
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
+  }
+
+  String _getCategoryNameById(
+    String? categoryId,
+    List<CategoryEntity> categories,
+  ) {
+    if (categoryId == null) return 'Other';
+    try {
+      return categories.firstWhere((c) => c.categoryId == categoryId).name;
+    } catch (e) {
+      return 'Other';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final itemState = ref.watch(itemViewModelProvider);
+    final categoryState = ref.watch(categoryViewModelProvider);
+    final filteredItems = _getFilteredItems(itemState);
     return Scaffold(
       // backgroundColor: context.backgroundColor // Using theme default,
       body: SafeArea(
@@ -286,17 +294,68 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   scrollDirection: Axis.horizontal,
-                  itemCount: _categories.length,
+                  itemCount:
+                      categoryState.categories.length + 1, // +1 for "All"
                   itemBuilder: (context, index) {
-                    final category = _categories[index];
-                    final isSelected = _selectedCategory == category['name'];
+                    // First item is "All"
+                    if (index == 0) {
+                      final isSelected = _selectedCategoryId == null;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 10),
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedCategoryId = null;
+                            });
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(
+                              gradient: isSelected
+                                  ? AppColors.primaryGradient
+                                  : null,
+                              color: isSelected ? null : Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: AppColors.softShadow,
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.apps_rounded,
+                                  size: 18,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : AppColors.textSecondary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'All',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    final category = categoryState.categories[index - 1];
+                    final isSelected =
+                        _selectedCategoryId == category.categoryId;
 
                     return Padding(
                       padding: const EdgeInsets.only(right: 10),
                       child: GestureDetector(
                         onTap: () {
                           setState(() {
-                            _selectedCategory = category['name'];
+                            _selectedCategoryId = category.categoryId;
                           });
                         },
                         child: AnimatedContainer(
@@ -313,7 +372,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Row(
                             children: [
                               Icon(
-                                category['icon'],
+                                _getCategoryIcon(category.name),
                                 size: 18,
                                 color: isSelected
                                     ? Colors.white
@@ -321,7 +380,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                category['name'],
+                                category.name,
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
@@ -352,7 +411,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: _StatCard(
                         icon: Icons.search_off_rounded,
                         title: 'Lost Items',
-                        value: '12',
+                        value: '${itemState.lostItems.length}',
                         gradient: AppColors.lostGradient,
                       ),
                     ),
@@ -361,7 +420,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: _StatCard(
                         icon: Icons.check_circle_rounded,
                         title: 'Found Items',
-                        value: '8',
+                        value: '${itemState.foundItems.length}',
                         gradient: AppColors.foundGradient,
                       ),
                     ),
@@ -405,7 +464,16 @@ class _HomeScreenState extends State<HomeScreen> {
             const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
             // Items List
-            _filteredItems.isEmpty
+            itemState.status == ItemStatus.loading
+                ? const SliverToBoxAdapter(
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(40.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  )
+                : filteredItems.isEmpty
                 ? SliverToBoxAdapter(
                     child: Center(
                       child: Padding(
@@ -426,6 +494,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Be the first to report a lost or found item!',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: context.textSecondary,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -435,33 +511,38 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate((context, index) {
-                        final item = _filteredItems[index];
+                        final item = filteredItems[index];
+                        final categoryName = _getCategoryNameById(
+                          item.categoryId,
+                          categoryState.categories,
+                        );
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 16.0),
                           child: _ItemCard(
-                            title: item['title'],
-                            location: item['location'],
-                            time: item['time'],
-                            category: item['category'],
-                            isLost: item['isLost'],
+                            title: item.itemName,
+                            location: item.location,
+                            time: _getTimeAgo(item.createdAt),
+                            category: categoryName,
+                            isLost: item.type == ItemType.lost,
                             onTap: () {
                               AppRoutes.push(
                                 context,
                                 ItemDetailPage(
-                                  title: item['title'],
-                                  location: item['location'],
-                                  time: item['time'],
-                                  category: item['category'],
-                                  isLost: item['isLost'],
+                                  title: item.itemName,
+                                  location: item.location,
+                                  time: _getTimeAgo(item.createdAt),
+                                  category: categoryName,
+                                  isLost: item.type == ItemType.lost,
                                   description:
-                                      'This item was ${item['isLost'] ? 'lost' : 'found'} at ${item['location']}. Please contact if you have any information.',
-                                  reportedBy: 'John Doe',
+                                      item.description ??
+                                      'No description provided.',
+                                  reportedBy: item.reportedBy ?? 'Anonymous',
                                 ),
                               );
                             },
                           ),
                         );
-                      }, childCount: _filteredItems.length),
+                      }, childCount: filteredItems.length),
                     ),
                   ),
 
