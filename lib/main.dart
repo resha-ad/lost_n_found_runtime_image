@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lost_n_found/app/app.dart';
 import 'package:lost_n_found/core/services/hive/hive_service.dart';
+import 'package:lost_n_found/core/services/storage/user_session_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,5 +22,15 @@ void main() async {
   // initialize Hive or other services if needed
   await HiveService().init();
 
-  runApp(const ProviderScope(child: MyApp()));
+  // Initialize SharedPreferences
+  final sharedPreferences = await SharedPreferences.getInstance();
+
+  runApp(
+    ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(sharedPreferences),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }

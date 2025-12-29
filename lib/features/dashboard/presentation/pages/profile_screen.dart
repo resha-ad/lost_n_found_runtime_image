@@ -1,16 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/theme_extensions.dart';
+import '../../../../app/theme/theme_provider.dart';
 import '../../../../app/routes/app_routes.dart';
+import '../../../../core/services/storage/user_session_service.dart';
 import '../../../auth/presentation/pages/login_page.dart';
+import '../../../auth/presentation/view_model/auth_viewmodel.dart';
+import '../../../item/presentation/view_model/item_viewmodel.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => _loadMyItems());
+  }
+
+  void _loadMyItems() {
+    final userSessionService = ref.read(userSessionServiceProvider);
+    final userId = userSessionService.getCurrentUserId();
+    if (userId != null) {
+      ref.read(itemViewModelProvider.notifier).getMyItems(userId);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final userSessionService = ref.watch(userSessionServiceProvider);
+    final userName = userSessionService.getCurrentUserFullName() ?? 'User';
+    final userEmail = userSessionService.getCurrentUserEmail() ?? '';
+    final itemState = ref.watch(itemViewModelProvider);
+
     return Scaffold(
-      // backgroundColor: context.backgroundColor // Using theme default,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -54,20 +82,23 @@ class ProfileScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: const CircleAvatar(
+                      child: CircleAvatar(
                         radius: 60,
                         backgroundColor: Colors.white,
-                        child: Icon(
-                          Icons.person_rounded,
-                          size: 60,
-                          color: AppColors.primary,
+                        child: Text(
+                          userName.isNotEmpty ? userName[0].toUpperCase() : 'U',
+                          style: TextStyle(
+                            fontSize: 48,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 16),
 
                     Text(
-                      'John Doe',
+                      userName,
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -76,7 +107,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'john.doe@softwarica.edu.np',
+                      userEmail,
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white70,
@@ -90,19 +121,28 @@ class ProfileScreen extends StatelessWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _StatItem(title: 'Lost', value: '12'),
+                          _StatItem(
+                            title: 'Lost',
+                            value: '${itemState.myLostItems.length}',
+                          ),
                           Container(
                             width: 1,
                             height: 40,
                             color: AppColors.white30,
                           ),
-                          _StatItem(title: 'Found', value: '8'),
+                          _StatItem(
+                            title: 'Found',
+                            value: '${itemState.myFoundItems.length}',
+                          ),
                           Container(
                             width: 1,
                             height: 40,
                             color: AppColors.white30,
                           ),
-                          _StatItem(title: 'Returned', value: '5'),
+                          _StatItem(
+                            title: 'Total',
+                            value: '${itemState.myLostItems.length + itemState.myFoundItems.length}',
+                          ),
                         ],
                       ),
                     ),
@@ -160,6 +200,8 @@ class ProfileScreen extends StatelessWidget {
                       onTap: () {},
                     ),
                     const SizedBox(height: 12),
+                    _ThemeToggleItem(ref: ref),
+                    const SizedBox(height: 12),
                     _MenuItem(
                       icon: Icons.help_outline_rounded,
                       title: 'Help & Support',
@@ -206,7 +248,7 @@ class ProfileScreen extends StatelessWidget {
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
@@ -219,16 +261,20 @@ class ProfileScreen extends StatelessWidget {
         content: Text('Are you sure you want to logout?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text(
               'Cancel',
               style: TextStyle(color: context.textSecondary),
             ),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              AppRoutes.pushAndRemoveUntil(context, const LoginPage());
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              // Clear user session
+              await ref.read(authViewModelProvider.notifier).logout();
+              if (context.mounted) {
+                AppRoutes.pushAndRemoveUntil(context, const LoginPage());
+              }
             },
             child: Text(
               'Logout',
@@ -299,9 +345,9 @@ class _MenuItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surfaceColor,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: AppColors.softShadow,
+        boxShadow: context.cardShadow,
       ),
       child: Material(
         color: Colors.transparent,
@@ -316,7 +362,7 @@ class _MenuItem extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: (iconColor ?? AppColors.primary).withAlpha(26), // 10% opacity
+                    color: (iconColor ?? AppColors.primary).withAlpha(26),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -332,7 +378,7 @@ class _MenuItem extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: titleColor ?? AppColors.textPrimary,
+                      color: titleColor ?? context.textPrimary,
                     ),
                   ),
                 ),
@@ -345,6 +391,79 @@ class _MenuItem extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ThemeToggleItem extends StatelessWidget {
+  final WidgetRef ref;
+
+  const _ThemeToggleItem({required this.ref});
+
+  @override
+  Widget build(BuildContext context) {
+    final themeMode = ref.watch(themeModeProvider);
+    final isDarkMode = themeMode == ThemeMode.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: context.surfaceColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: context.cardShadow,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withAlpha(26),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                isDarkMode ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                color: AppColors.primary,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Dark Mode',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: context.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    isDarkMode ? 'On' : 'Off',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Switch(
+              value: isDarkMode,
+              onChanged: (value) {
+                ref.read(themeModeProvider.notifier).setThemeMode(
+                      value ? ThemeMode.dark : ThemeMode.light,
+                    );
+              },
+              activeTrackColor: AppColors.primary,
+              activeThumbColor: Colors.white,
+            ),
+          ],
         ),
       ),
     );

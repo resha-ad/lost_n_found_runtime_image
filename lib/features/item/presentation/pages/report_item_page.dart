@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/theme_extensions.dart';
+import '../../../../core/services/storage/user_session_service.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../category/domain/entities/category_entity.dart';
 import '../../../category/presentation/state/category_state.dart';
@@ -55,6 +56,9 @@ class _ReportItemPageState extends ConsumerState<ReportItemPage> {
 
   Future<void> _handleSubmit() async {
     if (_formKey.currentState!.validate()) {
+      final userSessionService = ref.read(userSessionServiceProvider);
+      final userId = userSessionService.getCurrentUserId();
+
       await ref.read(itemViewModelProvider.notifier).createItem(
             itemName: _titleController.text.trim(),
             description: _descriptionController.text.trim().isEmpty
@@ -63,6 +67,7 @@ class _ReportItemPageState extends ConsumerState<ReportItemPage> {
             categoryId: _selectedCategoryId,
             location: _locationController.text.trim(),
             type: _selectedType,
+            reportedBy: userId,
           );
     }
   }

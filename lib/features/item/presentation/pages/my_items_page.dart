@@ -1,71 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lost_n_found/core/services/storage/user_session_service.dart';
+import 'package:lost_n_found/features/category/presentation/view_model/category_viewmodel.dart';
+import 'package:lost_n_found/features/item/domain/entities/item_entity.dart';
+import 'package:lost_n_found/features/item/presentation/state/item_state.dart';
+import 'package:lost_n_found/features/item/presentation/view_model/item_viewmodel.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/theme_extensions.dart';
 
-class MyItemsPage extends StatefulWidget {
+class MyItemsPage extends ConsumerStatefulWidget {
   const MyItemsPage({super.key});
 
   @override
-  State<MyItemsPage> createState() => _MyItemsPageState();
+  ConsumerState<MyItemsPage> createState() => _MyItemsPageState();
 }
 
-class _MyItemsPageState extends State<MyItemsPage>
+class _MyItemsPageState extends ConsumerState<MyItemsPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-
-  // Mock data for user's items
-  final List<Map<String, dynamic>> _myLostItems = [
-    {
-      'title': 'iPhone 14 Pro',
-      'location': 'Library, Block A',
-      'time': '2h ago',
-      'category': 'Electronics',
-      'status': 'active', // active, claimed, resolved
-    },
-    {
-      'title': 'Car Keys',
-      'location': 'Parking Lot',
-      'time': '5h ago',
-      'category': 'Keys',
-      'status': 'active',
-    },
-    {
-      'title': 'Apple Watch',
-      'location': 'Gym',
-      'time': '1d ago',
-      'category': 'Accessories',
-      'status': 'resolved',
-    },
-  ];
-
-  final List<Map<String, dynamic>> _myFoundItems = [
-    {
-      'title': 'Blue Backpack',
-      'location': 'Cafeteria',
-      'time': '3h ago',
-      'category': 'Bags',
-      'status': 'active',
-    },
-    {
-      'title': 'Student ID Card',
-      'location': 'Block C, Room 201',
-      'time': '1d ago',
-      'category': 'Documents',
-      'status': 'claimed',
-    },
-    {
-      'title': 'Wallet',
-      'location': 'Block B, Ground Floor',
-      'time': '2d ago',
-      'category': 'Personal',
-      'status': 'resolved',
-    },
-  ];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    Future.microtask(() => _loadData());
+  }
+
+  void _loadData() {
+    final userSessionService = ref.read(userSessionServiceProvider);
+    final userId = userSessionService.getCurrentUserId();
+    if (userId != null) {
+      ref.read(itemViewModelProvider.notifier).getMyItems(userId);
+    }
+    ref.read(categoryViewModelProvider.notifier).getAllCategories();
   }
 
   @override
@@ -74,10 +41,38 @@ class _MyItemsPageState extends State<MyItemsPage>
     super.dispose();
   }
 
+  String _getTimeAgo(DateTime? dateTime) {
+    if (dateTime == null) return '';
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
+  }
+
+  String _getCategoryName(String? categoryId) {
+    if (categoryId == null) return 'Other';
+    final categoryState = ref.read(categoryViewModelProvider);
+    final category = categoryState.categories.where(
+      (c) => c.categoryId == categoryId,
+    );
+    return category.isNotEmpty ? category.first.name : 'Other';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final itemState = ref.watch(itemViewModelProvider);
+    final myLostItems = itemState.myLostItems;
+    final myFoundItems = itemState.myFoundItems;
+
     return Scaffold(
-      // backgroundColor: context.backgroundColor // Using theme default,
       body: SafeArea(
         child: Column(
           children: [
@@ -168,7 +163,7 @@ class _MyItemsPageState extends State<MyItemsPage>
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            '${_myLostItems.length}',
+                            '${myLostItems.length}',
                             style: TextStyle(fontSize: 12),
                           ),
                         ),
@@ -193,7 +188,7 @@ class _MyItemsPageState extends State<MyItemsPage>
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            '${_myFoundItems.length}',
+                            '${myFoundItems.length}',
                             style: TextStyle(fontSize: 12),
                           ),
                         ),
@@ -208,15 +203,21 @@ class _MyItemsPageState extends State<MyItemsPage>
 
             // Tab Views
             Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  // My Lost Items
-                  _buildItemsList(_myLostItems, true),
-                  // My Found Items
-                  _buildItemsList(_myFoundItems, false),
-                ],
-              ),
+              child: itemState.status == ItemStatus.loading
+                  ? Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                      ),
+                    )
+                  : TabBarView(
+                      controller: _tabController,
+                      children: [
+                        // My Lost Items
+                        _buildItemsList(myLostItems, true),
+                        // My Found Items
+                        _buildItemsList(myFoundItems, false),
+                      ],
+                    ),
             ),
           ],
         ),
@@ -224,7 +225,7 @@ class _MyItemsPageState extends State<MyItemsPage>
     );
   }
 
-  Widget _buildItemsList(List<Map<String, dynamic>> items, bool isLost) {
+  Widget _buildItemsList(List<ItemEntity> items, bool isLost) {
     if (items.isEmpty) {
       return Center(
         child: Column(
@@ -254,14 +255,18 @@ class _MyItemsPageState extends State<MyItemsPage>
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
+        final categoryName = _getCategoryName(item.categoryId);
+        final timeAgo = _getTimeAgo(item.createdAt);
+        final status = item.status ?? (item.isClaimed ? 'claimed' : 'active');
+
         return Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: _MyItemCard(
-            title: item['title'],
-            location: item['location'],
-            time: item['time'],
-            category: item['category'],
-            status: item['status'],
+            title: item.itemName,
+            location: item.location,
+            time: timeAgo,
+            category: categoryName,
+            status: status,
             isLost: isLost,
             onTap: () {
               // Navigate to item detail
@@ -270,8 +275,7 @@ class _MyItemsPageState extends State<MyItemsPage>
               // Edit item
             },
             onDelete: () {
-              // Delete item
-              _showDeleteDialog(context, item['title']);
+              _showDeleteDialog(context, item);
             },
           ),
         );
@@ -279,10 +283,10 @@ class _MyItemsPageState extends State<MyItemsPage>
     );
   }
 
-  void _showDeleteDialog(BuildContext context, String itemTitle) {
+  void _showDeleteDialog(BuildContext context, ItemEntity item) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
@@ -290,10 +294,10 @@ class _MyItemsPageState extends State<MyItemsPage>
           'Delete Item',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        content: Text('Are you sure you want to delete "$itemTitle"?'),
+        content: Text('Are you sure you want to delete "${item.itemName}"?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text(
               'Cancel',
               style: TextStyle(color: context.textSecondary),
@@ -301,8 +305,18 @@ class _MyItemsPageState extends State<MyItemsPage>
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              // TODO: Delete item
+              Navigator.pop(dialogContext);
+              if (item.itemId != null) {
+                ref.read(itemViewModelProvider.notifier).deleteItem(item.itemId!);
+                // Reload my items after deletion
+                final userSessionService = ref.read(userSessionServiceProvider);
+                final userId = userSessionService.getCurrentUserId();
+                if (userId != null) {
+                  Future.delayed(const Duration(milliseconds: 300), () {
+                    ref.read(itemViewModelProvider.notifier).getMyItems(userId);
+                  });
+                }
+              }
             },
             child: Text(
               'Delete',

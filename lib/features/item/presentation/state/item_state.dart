@@ -8,6 +8,8 @@ class ItemState extends Equatable {
   final List<ItemEntity> items;
   final List<ItemEntity> lostItems;
   final List<ItemEntity> foundItems;
+  final List<ItemEntity> myLostItems;
+  final List<ItemEntity> myFoundItems;
   final ItemEntity? selectedItem;
   final String? errorMessage;
 
@@ -16,6 +18,8 @@ class ItemState extends Equatable {
     this.items = const [],
     this.lostItems = const [],
     this.foundItems = const [],
+    this.myLostItems = const [],
+    this.myFoundItems = const [],
     this.selectedItem,
     this.errorMessage,
   });
@@ -25,6 +29,8 @@ class ItemState extends Equatable {
     List<ItemEntity>? items,
     List<ItemEntity>? lostItems,
     List<ItemEntity>? foundItems,
+    List<ItemEntity>? myLostItems,
+    List<ItemEntity>? myFoundItems,
     ItemEntity? selectedItem,
     String? errorMessage,
   }) {
@@ -33,11 +39,13 @@ class ItemState extends Equatable {
       items: items ?? this.items,
       lostItems: lostItems ?? this.lostItems,
       foundItems: foundItems ?? this.foundItems,
+      myLostItems: myLostItems ?? this.myLostItems,
+      myFoundItems: myFoundItems ?? this.myFoundItems,
       selectedItem: selectedItem ?? this.selectedItem,
       errorMessage: errorMessage ?? this.errorMessage,
     );
   }
 
   @override
-  List<Object?> get props => [status, items, lostItems, foundItems, selectedItem, errorMessage];
+  List<Object?> get props => [status, items, lostItems, foundItems, myLostItems, myFoundItems, selectedItem, errorMessage];
 }

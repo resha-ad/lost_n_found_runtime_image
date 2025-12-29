@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/theme_extensions.dart';
 import '../../../../app/routes/app_routes.dart';
+import '../../../../core/services/storage/user_session_service.dart';
 import '../../../item/presentation/pages/item_detail_page.dart';
 import '../../../item/domain/entities/item_entity.dart';
 import '../../../item/presentation/view_model/item_viewmodel.dart';
@@ -104,6 +105,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final itemState = ref.watch(itemViewModelProvider);
     final categoryState = ref.watch(categoryViewModelProvider);
     final filteredItems = _getFilteredItems(itemState);
+    final userSessionService = ref.watch(userSessionServiceProvider);
+    final userName = userSessionService.getCurrentUserFullName() ?? 'User';
+
     return Scaffold(
       // backgroundColor: context.backgroundColor // Using theme default,
       body: SafeArea(
@@ -129,7 +133,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'John Doe',
+                          userName,
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
