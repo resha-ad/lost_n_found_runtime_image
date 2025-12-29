@@ -109,6 +109,18 @@ class _SplashPageState extends ConsumerState<SplashPage>
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    // Responsive sizes
+    final logoSize = screenWidth < 360 ? 100.0 : 120.0;
+    final logoIconSize = screenWidth < 360 ? 48.0 : 56.0;
+    final titleFontSize = screenWidth < 360 ? 26.0 : 32.0;
+    final subtitleFontSize = screenWidth < 360 ? 14.0 : 16.0;
+    final bottomLogoWidth = screenWidth < 360 ? 140.0 : 160.0;
+    final bottomLogoHeight = screenWidth < 360 ? 44.0 : 50.0;
+    final verticalSpacing = screenHeight < 700 ? 30.0 : 40.0;
+
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: Container(
@@ -134,8 +146,8 @@ class _SplashPageState extends ConsumerState<SplashPage>
                     child: Transform.scale(
                       scale: _scaleAnimation.value,
                       child: Container(
-                        width: 120,
-                        height: 120,
+                        width: logoSize,
+                        height: logoSize,
                         decoration: BoxDecoration(
                           gradient: AppColors.primaryGradient,
                           borderRadius: BorderRadius.circular(28),
@@ -150,7 +162,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
                         child: Center(
                           child: Icon(
                             Icons.search_rounded,
-                            size: 56,
+                            size: logoIconSize,
                             color: Colors.white,
                           ),
                         ),
@@ -159,34 +171,41 @@ class _SplashPageState extends ConsumerState<SplashPage>
                   );
                 },
               ),
-              const SizedBox(height: 40),
+              SizedBox(height: verticalSpacing),
               // App Title
               FadeTransition(
                 opacity: _fadeAnimation,
                 child: SlideTransition(
                   position: _slideAnimation,
-                  child: Column(
-                    children: [
-                      Text(
-                        'Lost & Found',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w700,
-                          color: context.textPrimary,
-                          letterSpacing: -0.5,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Column(
+                      children: [
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'Lost & Found',
+                            style: TextStyle(
+                              fontSize: titleFontSize,
+                              fontWeight: FontWeight.w700,
+                              color: context.textPrimary,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Reuniting people with their belongings',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                          color: context.textSecondary.withAlpha(180),
-                          letterSpacing: 0.2,
+                        const SizedBox(height: 12),
+                        Text(
+                          'Reuniting people with their belongings',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: subtitleFontSize,
+                            fontWeight: FontWeight.w400,
+                            color: context.textSecondary.withAlpha(180),
+                            letterSpacing: 0.2,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -219,8 +238,8 @@ class _SplashPageState extends ConsumerState<SplashPage>
                     children: [
                       SvgPicture.asset(
                         'assets/svg/softwarica_logo.svg',
-                        width: 160,
-                        height: 50,
+                        width: bottomLogoWidth,
+                        height: bottomLogoHeight,
                         colorFilter: ColorFilter.mode(
                           AppColors.textSecondary.withAlpha(150),
                           BlendMode.srcIn,

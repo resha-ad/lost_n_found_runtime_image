@@ -120,12 +120,17 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    // Responsive horizontal padding based on screen width
+    final horizontalPadding = screenWidth < 360 ? 10.0 : 16.0;
+    final fontSize = screenWidth < 360 ? 10.0 : 11.0;
+
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 8),
         decoration: BoxDecoration(
           gradient: isSelected ? AppColors.primaryGradient : null,
           borderRadius: BorderRadius.circular(16),
@@ -168,10 +173,11 @@ class _NavItem extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: fontSize,
                 fontWeight: FontWeight.w600,
                 color: isSelected ? Colors.white : AppColors.textTertiary,
               ),
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
