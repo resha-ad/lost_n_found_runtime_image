@@ -24,11 +24,7 @@ class BatchHiveModel extends HiveObject {
 
   // TOENtity
   BatchEntity toEntity() {
-    return BatchEntity(
-      batchId: batchId,
-      batchName: 'ktm - $batchName',
-      status: status,
-    );
+    return BatchEntity(batchId: batchId, batchName: batchName, status: status);
   }
 
   // From Entity -> conversion

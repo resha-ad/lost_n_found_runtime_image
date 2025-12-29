@@ -1,9 +1,17 @@
-import 'package:either_dart/src/either.dart';
+import 'package:dartz/dartz.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lost_n_found/core/error/failures.dart';
 import 'package:lost_n_found/features/batch/data/datasources/batch_datasource.dart';
+import 'package:lost_n_found/features/batch/data/datasources/local/batch_local_datasource.dart';
 import 'package:lost_n_found/features/batch/data/models/batch_hive_model.dart';
 import 'package:lost_n_found/features/batch/domain/entities/batch_entity.dart';
 import 'package:lost_n_found/features/batch/domain/repositories/batch_repository.dart';
+
+// Create provider
+final batchRepositoryProvider = Provider<IBatchRepository>((ref) {
+  final batchDatasource = ref.read(batchLocalDatasourceProvider);
+  return BatchRepository(batchDatasource: batchDatasource);
+});
 
 class BatchRepository implements IBatchRepository {
   final IBatchDataSource _batchDataSource;
@@ -69,8 +77,18 @@ class BatchRepository implements IBatchRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> updateBatch(BatchEntity batch) {
-    // TODO: implement updateBatch
-    throw UnimplementedError();
+  Future<Either<Failure, bool>> updateBatch(BatchEntity batch) async {
+    try {
+      final batchModel = BatchHiveModel.fromEntity(batch);
+      final result = await _batchDataSource.updateBatch(batchModel);
+      if (result) {
+        return const Right(true);
+      }
+      return const Left(
+        LocalDatabaseFailure(message: "Failed to update batch"),
+      );
+    } catch (e) {
+      return Left(LocalDatabaseFailure(message: e.toString()));
+    }
   }
 }
