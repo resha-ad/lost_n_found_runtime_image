@@ -41,22 +41,6 @@ class _MyItemsPageState extends ConsumerState<MyItemsPage>
     super.dispose();
   }
 
-  String _getTimeAgo(DateTime? dateTime) {
-    if (dateTime == null) return '';
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
-
-    if (difference.inDays > 0) {
-      return '${difference.inDays}d ago';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m ago';
-    } else {
-      return 'Just now';
-    }
-  }
-
   String _getCategoryName(String? categoryId) {
     if (categoryId == null) return 'Other';
     final categoryState = ref.read(categoryViewModelProvider);
@@ -112,10 +96,7 @@ class _MyItemsPageState extends ConsumerState<MyItemsPage>
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: AppColors.softShadow,
                     ),
-                    child: Icon(
-                      Icons.sort_rounded,
-                      color: context.textPrimary,
-                    ),
+                    child: Icon(Icons.sort_rounded, color: context.textPrimary),
                   ),
                 ],
               ),
@@ -262,7 +243,6 @@ class _MyItemsPageState extends ConsumerState<MyItemsPage>
       itemBuilder: (context, index) {
         final item = items[index];
         final categoryName = _getCategoryName(item.categoryId);
-        final timeAgo = _getTimeAgo(item.createdAt);
         final status = item.status ?? (item.isClaimed ? 'claimed' : 'active');
 
         return Padding(
@@ -270,7 +250,6 @@ class _MyItemsPageState extends ConsumerState<MyItemsPage>
           child: _MyItemCard(
             title: item.itemName,
             location: item.location,
-            time: timeAgo,
             category: categoryName,
             status: status,
             isLost: isLost,
@@ -293,9 +272,7 @@ class _MyItemsPageState extends ConsumerState<MyItemsPage>
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           'Delete Item',
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -313,7 +290,9 @@ class _MyItemsPageState extends ConsumerState<MyItemsPage>
             onPressed: () {
               Navigator.pop(dialogContext);
               if (item.itemId != null) {
-                ref.read(itemViewModelProvider.notifier).deleteItem(item.itemId!);
+                ref
+                    .read(itemViewModelProvider.notifier)
+                    .deleteItem(item.itemId!);
                 // Reload my items after deletion
                 final userSessionService = ref.read(userSessionServiceProvider);
                 final userId = userSessionService.getCurrentUserId();
@@ -341,7 +320,6 @@ class _MyItemsPageState extends ConsumerState<MyItemsPage>
 class _MyItemCard extends StatelessWidget {
   final String title;
   final String location;
-  final String time;
   final String category;
   final String status;
   final bool isLost;
@@ -352,7 +330,6 @@ class _MyItemCard extends StatelessWidget {
   const _MyItemCard({
     required this.title,
     required this.location,
-    required this.time,
     required this.category,
     required this.status,
     required this.isLost,
@@ -437,8 +414,8 @@ class _MyItemCard extends StatelessWidget {
                           gradient: isResolved
                               ? null
                               : (isLost
-                                  ? AppColors.lostGradient
-                                  : AppColors.foundGradient),
+                                    ? AppColors.lostGradient
+                                    : AppColors.foundGradient),
                           color: isResolved ? AppColors.claimedColor : null,
                           borderRadius: BorderRadius.circular(14),
                         ),
@@ -471,7 +448,9 @@ class _MyItemCard extends StatelessWidget {
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: _getStatusColor(status).withAlpha(26),
+                                    color: _getStatusColor(
+                                      status,
+                                    ).withAlpha(26),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
@@ -503,20 +482,6 @@ class _MyItemCard extends StatelessWidget {
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Icon(
-                                  Icons.access_time_rounded,
-                                  size: 14,
-                                  color: AppColors.textTertiary,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  time,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.textTertiary,
                                   ),
                                 ),
                               ],

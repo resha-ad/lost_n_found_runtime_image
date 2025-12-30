@@ -15,8 +15,6 @@ class ItemEntity extends Equatable {
   final String? mediaType; // image, video, etc.
   final bool isClaimed;
   final String? status;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
 
   const ItemEntity({
     this.itemId,
@@ -31,8 +29,6 @@ class ItemEntity extends Equatable {
     this.mediaType,
     this.isClaimed = false,
     this.status,
-    this.createdAt,
-    this.updatedAt,
   });
 
   @override
@@ -49,7 +45,5 @@ class ItemEntity extends Equatable {
         mediaType,
         isClaimed,
         status,
-        createdAt,
-        updatedAt,
       ];
 }

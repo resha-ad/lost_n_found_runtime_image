@@ -43,12 +43,6 @@ class ItemHiveModel extends HiveObject {
   @HiveField(11)
   final String? status;
 
-  @HiveField(12)
-  final DateTime? createdAt;
-
-  @HiveField(13)
-  final DateTime? updatedAt;
-
   ItemHiveModel({
     String? itemId,
     this.reportedBy,
@@ -62,13 +56,9 @@ class ItemHiveModel extends HiveObject {
     this.mediaType,
     bool? isClaimed,
     String? status,
-    DateTime? createdAt,
-    DateTime? updatedAt,
   })  : itemId = itemId ?? const Uuid().v4(),
         isClaimed = isClaimed ?? false,
-        status = status ?? 'active',
-        createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? DateTime.now();
+        status = status ?? 'active';
 
   ItemEntity toEntity() {
     return ItemEntity(
@@ -84,8 +74,6 @@ class ItemHiveModel extends HiveObject {
       mediaType: mediaType,
       isClaimed: isClaimed,
       status: status,
-      createdAt: createdAt,
-      updatedAt: updatedAt,
     );
   }
 
@@ -103,8 +91,6 @@ class ItemHiveModel extends HiveObject {
       mediaType: entity.mediaType,
       isClaimed: entity.isClaimed,
       status: entity.status,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
     );
   }
 

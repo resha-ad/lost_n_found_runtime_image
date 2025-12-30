@@ -34,7 +34,7 @@ class AuthLocalDatasource implements IAuthDataSource {
     try {
       final user = _hiveService.login(email, password);
       if (user != null && user.authId != null) {
-        // Save user session to SharedPreferences
+        // Save user session to SharedPreferences : Pachi app restart vayo vani pani user logged in rahos
         await _userSessionService.saveUserSession(
           userId: user.authId!,
           email: user.email,

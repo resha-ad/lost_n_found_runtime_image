@@ -72,22 +72,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return items;
   }
 
-  String _getTimeAgo(DateTime? dateTime) {
-    if (dateTime == null) return '';
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
-
-    if (difference.inDays > 0) {
-      return '${difference.inDays}d ago';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m ago';
-    } else {
-      return 'Just now';
-    }
-  }
-
   String _getCategoryNameById(
     String? categoryId,
     List<CategoryEntity> categories,
@@ -525,7 +509,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           child: _ItemCard(
                             title: item.itemName,
                             location: item.location,
-                            time: _getTimeAgo(item.createdAt),
                             category: categoryName,
                             isLost: item.type == ItemType.lost,
                             onTap: () {
@@ -534,7 +517,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ItemDetailPage(
                                   title: item.itemName,
                                   location: item.location,
-                                  time: _getTimeAgo(item.createdAt),
                                   category: categoryName,
                                   isLost: item.type == ItemType.lost,
                                   description:
@@ -629,7 +611,6 @@ class _StatCard extends StatelessWidget {
 class _ItemCard extends StatelessWidget {
   final String title;
   final String location;
-  final String time;
   final String category;
   final bool isLost;
   final VoidCallback? onTap;
@@ -637,7 +618,6 @@ class _ItemCard extends StatelessWidget {
   const _ItemCard({
     required this.title,
     required this.location,
-    required this.time,
     required this.category,
     required this.isLost,
     this.onTap,
@@ -777,20 +757,6 @@ class _ItemCard extends StatelessWidget {
                                 color: AppColors.primary,
                                 fontWeight: FontWeight.w600,
                               ),
-                            ),
-                          ),
-                          const Spacer(),
-                          Icon(
-                            Icons.access_time_rounded,
-                            size: 14,
-                            color: AppColors.textTertiary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            time,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textTertiary,
                             ),
                           ),
                         ],

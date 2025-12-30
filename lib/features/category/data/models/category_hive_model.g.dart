@@ -21,14 +21,13 @@ class CategoryHiveModelAdapter extends TypeAdapter<CategoryHiveModel> {
       name: fields[1] as String,
       description: fields[2] as String?,
       status: fields[3] as String?,
-      createdAt: fields[4] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, CategoryHiveModel obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(4)
       ..writeByte(0)
       ..write(obj.categoryId)
       ..writeByte(1)
@@ -36,9 +35,7 @@ class CategoryHiveModelAdapter extends TypeAdapter<CategoryHiveModel> {
       ..writeByte(2)
       ..write(obj.description)
       ..writeByte(3)
-      ..write(obj.status)
-      ..writeByte(4)
-      ..write(obj.createdAt);
+      ..write(obj.status);
   }
 
   @override

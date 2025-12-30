@@ -19,18 +19,13 @@ class CategoryHiveModel extends HiveObject {
   @HiveField(3)
   final String? status;
 
-  @HiveField(4)
-  final DateTime? createdAt;
-
   CategoryHiveModel({
     String? categoryId,
     required this.name,
     this.description,
     String? status,
-    DateTime? createdAt,
   })  : categoryId = categoryId ?? const Uuid().v4(),
-        status = status ?? 'active',
-        createdAt = createdAt ?? DateTime.now();
+        status = status ?? 'active';
 
   CategoryEntity toEntity() {
     return CategoryEntity(
@@ -38,7 +33,6 @@ class CategoryHiveModel extends HiveObject {
       name: name,
       description: description,
       status: status,
-      createdAt: createdAt,
     );
   }
 
@@ -48,7 +42,6 @@ class CategoryHiveModel extends HiveObject {
       name: entity.name,
       description: entity.description,
       status: entity.status,
-      createdAt: entity.createdAt,
     );
   }
 

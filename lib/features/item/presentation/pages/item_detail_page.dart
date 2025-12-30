@@ -6,7 +6,6 @@ import '../../../../core/utils/snackbar_utils.dart';
 class ItemDetailPage extends StatelessWidget {
   final String title;
   final String location;
-  final String time;
   final String category;
   final bool isLost;
   final String? description;
@@ -17,7 +16,6 @@ class ItemDetailPage extends StatelessWidget {
     super.key,
     required this.title,
     required this.location,
-    required this.time,
     required this.category,
     required this.isLost,
     this.description,
@@ -225,19 +223,9 @@ class ItemDetailPage extends StatelessWidget {
                               ],
                             ),
                             const SizedBox(height: 16),
-                            Wrap(
-                              spacing: 16,
-                              runSpacing: 8,
-                              children: [
-                                _InfoChip(
-                                  icon: Icons.location_on_rounded,
-                                  text: location,
-                                ),
-                                _InfoChip(
-                                  icon: Icons.access_time_rounded,
-                                  text: time,
-                                ),
-                              ],
+                            _InfoChip(
+                              icon: Icons.location_on_rounded,
+                              text: location,
                             ),
                           ],
                         ),
