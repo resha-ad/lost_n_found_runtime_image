@@ -22,7 +22,8 @@ void main() async {
   // initialize Hive or other services if needed
   await HiveService().init();
 
-  // Initialize SharedPreferences
+  // Initialize SharedPreferences : because this is async operation
+  // but riverpod providers are sync so we need to initialize it here
   final sharedPreferences = await SharedPreferences.getInstance();
 
   runApp(

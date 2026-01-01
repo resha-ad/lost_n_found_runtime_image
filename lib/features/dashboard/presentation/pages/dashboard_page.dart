@@ -143,7 +143,7 @@ class _NavItem extends StatelessWidget {
               children: [
                 Icon(
                   icon,
-                  color: isSelected ? Colors.white : AppColors.textTertiary,
+                  color: isSelected ? Colors.white : context.textTertiary,
                   size: 24,
                 ),
                 if (badge != null)
@@ -175,7 +175,7 @@ class _NavItem extends StatelessWidget {
               style: TextStyle(
                 fontSize: fontSize,
                 fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white : AppColors.textTertiary,
+                color: isSelected ? Colors.white : context.textTertiary,
               ),
               overflow: TextOverflow.ellipsis,
             ),

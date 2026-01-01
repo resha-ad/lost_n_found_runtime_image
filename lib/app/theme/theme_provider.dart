@@ -12,16 +12,13 @@ class ThemeModeNotifier extends Notifier<ThemeMode> {
 
   @override
   ThemeMode build() {
-    _loadTheme();
-    return ThemeMode.system;
-  }
-
-  void _loadTheme() {
+    // Load saved theme from SharedPreferences synchronously
     final prefs = ref.read(sharedPreferencesProvider);
     final themeValue = prefs.getString(_themeKey);
     if (themeValue != null) {
-      state = _themeModeFromString(themeValue);
+      return _themeModeFromString(themeValue);
     }
+    return ThemeMode.system;
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {

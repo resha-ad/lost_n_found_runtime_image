@@ -92,9 +92,9 @@ class _MyItemsPageState extends ConsumerState<MyItemsPage>
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.surfaceColor,
                       borderRadius: BorderRadius.circular(14),
-                      boxShadow: AppColors.softShadow,
+                      boxShadow: context.softShadow,
                     ),
                     child: Icon(Icons.sort_rounded, color: context.textPrimary),
                   ),
@@ -107,9 +107,9 @@ class _MyItemsPageState extends ConsumerState<MyItemsPage>
               margin: const EdgeInsets.symmetric(horizontal: 20),
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.surfaceColor,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: AppColors.softShadow,
+                boxShadow: context.softShadow,
               ),
               child: TabBar(
                 controller: _tabController,
@@ -120,7 +120,7 @@ class _MyItemsPageState extends ConsumerState<MyItemsPage>
                 indicatorSize: TabBarIndicatorSize.tab,
                 dividerColor: Colors.transparent,
                 labelColor: Colors.white,
-                unselectedLabelColor: AppColors.textSecondary,
+                unselectedLabelColor: context.textSecondary,
                 labelStyle: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
@@ -221,7 +221,7 @@ class _MyItemsPageState extends ConsumerState<MyItemsPage>
             Icon(
               isLost ? Icons.search_off_rounded : Icons.check_circle_rounded,
               size: 64,
-              color: AppColors.textTertiary.withAlpha(128),
+              color: context.textTertiary.withAlpha(128),
             ),
             const SizedBox(height: 16),
             Text(
@@ -391,9 +391,9 @@ class _MyItemCard extends StatelessWidget {
       opacity: isResolved ? 0.6 : 1.0,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.surfaceColor,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: AppColors.softShadow,
+          boxShadow: context.softShadow,
         ),
         child: Material(
           color: Colors.transparent,
@@ -493,7 +493,7 @@ class _MyItemCard extends StatelessWidget {
                   ),
                   if (!isResolved) ...[
                     const SizedBox(height: 12),
-                    const Divider(color: AppColors.divider),
+                    Divider(color: context.dividerColor),
                     const SizedBox(height: 8),
                     Row(
                       children: [

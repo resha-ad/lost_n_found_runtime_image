@@ -173,14 +173,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.surfaceColor,
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: AppColors.softShadow,
+                    boxShadow: context.softShadow,
                   ),
                   child: TextField(
                     decoration: InputDecoration(
                       hintText: 'Search items...',
-                      hintStyle: TextStyle(color: AppColors.textTertiary),
+                      hintStyle: TextStyle(color: context.textTertiary),
                       prefixIcon: Icon(
                         Icons.search_rounded,
                         color: context.textSecondary,
@@ -217,9 +217,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.surfaceColor,
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: AppColors.softShadow,
+                    boxShadow: context.softShadow,
                   ),
                   child: Row(
                     children: List.generate(_filters.length, (index) {
@@ -260,7 +260,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   fontWeight: FontWeight.w600,
                                   color: isSelected
                                       ? Colors.white
-                                      : AppColors.textSecondary,
+                                      : context.textSecondary,
                                 ),
                               ),
                             ),
@@ -303,9 +303,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               gradient: isSelected
                                   ? AppColors.primaryGradient
                                   : null,
-                              color: isSelected ? null : Colors.white,
+                              color: isSelected ? null : context.surfaceColor,
                               borderRadius: BorderRadius.circular(12),
-                              boxShadow: AppColors.softShadow,
+                              boxShadow: context.softShadow,
                             ),
                             child: Row(
                               children: [
@@ -314,7 +314,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   size: 18,
                                   color: isSelected
                                       ? Colors.white
-                                      : AppColors.textSecondary,
+                                      : context.textSecondary,
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
@@ -324,7 +324,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     fontWeight: FontWeight.w600,
                                     color: isSelected
                                         ? Colors.white
-                                        : AppColors.textSecondary,
+                                        : context.textSecondary,
                                   ),
                                 ),
                               ],
@@ -353,9 +353,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             gradient: isSelected
                                 ? AppColors.primaryGradient
                                 : null,
-                            color: isSelected ? null : Colors.white,
+                            color: isSelected ? null : context.surfaceColor,
                             borderRadius: BorderRadius.circular(12),
-                            boxShadow: AppColors.softShadow,
+                            boxShadow: context.softShadow,
                           ),
                           child: Row(
                             children: [
@@ -364,7 +364,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 size: 18,
                                 color: isSelected
                                     ? Colors.white
-                                    : AppColors.textSecondary,
+                                    : context.textSecondary,
                               ),
                               const SizedBox(width: 8),
                               Text(
@@ -374,7 +374,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   fontWeight: FontWeight.w600,
                                   color: isSelected
                                       ? Colors.white
-                                      : AppColors.textSecondary,
+                                      : context.textSecondary,
                                 ),
                               ),
                             ],
@@ -471,7 +471,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             Icon(
                               Icons.inbox_rounded,
                               size: 64,
-                              color: AppColors.textTertiary.withAlpha(128),
+                              color: context.textTertiary.withAlpha(128),
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -558,9 +558,9 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surfaceColor,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: AppColors.cardShadow,
+        boxShadow: context.cardShadow,
       ),
       child: Row(
         children: [
@@ -646,9 +646,9 @@ class _ItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surfaceColor,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: AppColors.softShadow,
+        boxShadow: context.softShadow,
       ),
       child: Material(
         color: Colors.transparent,
