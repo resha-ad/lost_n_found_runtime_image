@@ -1,23 +1,40 @@
 import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lost_n_found/core/error/failures.dart';
+import 'package:lost_n_found/core/services/connectivity/network_info.dart';
 import 'package:lost_n_found/features/batch/data/datasources/batch_datasource.dart';
 import 'package:lost_n_found/features/batch/data/datasources/local/batch_local_datasource.dart';
+import 'package:lost_n_found/features/batch/data/datasources/remote/batch_remote_datasource.dart';
+import 'package:lost_n_found/features/batch/data/models/batch_api_model.dart';
 import 'package:lost_n_found/features/batch/data/models/batch_hive_model.dart';
 import 'package:lost_n_found/features/batch/domain/entities/batch_entity.dart';
 import 'package:lost_n_found/features/batch/domain/repositories/batch_repository.dart';
 
 // Create provider
 final batchRepositoryProvider = Provider<IBatchRepository>((ref) {
-  final batchDatasource = ref.read(batchLocalDatasourceProvider);
-  return BatchRepository(batchDatasource: batchDatasource);
+  final batchLocalDatasource = ref.read(batchLocalDatasourceProvider);
+  final batchRemoteDataSource = ref.read(batchRemoteProvider);
+  final networkInfo = ref.read(networkInfoProvider);
+  return BatchRepository(
+    batchDatasource: batchLocalDatasource,
+    batchRemoteDataSource: batchRemoteDataSource,
+    networkInfo: networkInfo,
+  );
 });
 
 class BatchRepository implements IBatchRepository {
-  final IBatchDataSource _batchDataSource;
+  final IBatchLocalDataSource _batchLocalDataSource;
+  final IBatchRemoteDataSource _batchRemoteDataSource;
+  final NetworkInfo _networkInfo;
 
-  BatchRepository({required IBatchDataSource batchDatasource})
-    : _batchDataSource = batchDatasource;
+  BatchRepository({
+    required IBatchLocalDataSource batchDatasource,
+    required IBatchRemoteDataSource batchRemoteDataSource,
+    required NetworkInfo networkInfo,
+  }) : _batchLocalDataSource = batchDatasource,
+       _batchRemoteDataSource = batchRemoteDataSource,
+       _networkInfo = networkInfo;
 
   @override
   Future<Either<Failure, bool>> createBatch(BatchEntity batch) async {
@@ -25,7 +42,7 @@ class BatchRepository implements IBatchRepository {
       // conversion
       // entity lai model ma convert gara
       final batchModel = BatchHiveModel.fromEntity(batch);
-      final result = await _batchDataSource.createBatch(batchModel);
+      final result = await _batchLocalDataSource.createBatch(batchModel);
       if (result) {
         return const Right(true);
       }
@@ -40,7 +57,7 @@ class BatchRepository implements IBatchRepository {
   @override
   Future<Either<Failure, bool>> deleteBatch(String batchId) async {
     try {
-      final result = await _batchDataSource.deleteBatch(batchId);
+      final result = await _batchLocalDataSource.deleteBatch(batchId);
       if (result) {
         return Right(true);
       }
@@ -53,19 +70,41 @@ class BatchRepository implements IBatchRepository {
 
   @override
   Future<Either<Failure, List<BatchEntity>>> getAllBatches() async {
-    try {
-      final models = await _batchDataSource.getAllBatches();
-      final entities = BatchHiveModel.toEntityList(models);
-      return Right(entities);
-    } catch (e) {
-      return Left(LocalDatabaseFailure(message: e.toString()));
+    // Check if internet is available
+    if (await _networkInfo.isConnected) {
+      try {
+        // Fetch from remote (API)
+        final apiModels = await _batchRemoteDataSource.getAllBatches();
+
+        // Convert API models to entities
+        final result = BatchApiModel.toEntityList(apiModels);
+
+        return Right(result);
+      } on DioException catch (e) {
+        return Left(
+          ApiFailure(
+            statusCode: e.response?.statusCode,
+            message: e.response?.data['message'] ?? 'Failed to fetch batches',
+          ),
+        );
+      }
+    } else {
+      // Offline → get from local (Hive)
+      try {
+        final models = await _batchLocalDataSource.getAllBatches();
+        // Convert Hive models to entities
+        final entities = BatchHiveModel.toEntityList(models);
+        return Right(entities);
+      } catch (e) {
+        return Left(LocalDatabaseFailure(message: e.toString()));
+      }
     }
   }
 
   @override
   Future<Either<Failure, BatchEntity>> getBatchById(String batchId) async {
     try {
-      final model = await _batchDataSource.getBatchById(batchId);
+      final model = await _batchLocalDataSource.getBatchById(batchId);
       if (model != null) {
         final entity = model.toEntity();
         return Right(entity);
@@ -80,7 +119,7 @@ class BatchRepository implements IBatchRepository {
   Future<Either<Failure, bool>> updateBatch(BatchEntity batch) async {
     try {
       final batchModel = BatchHiveModel.fromEntity(batch);
-      final result = await _batchDataSource.updateBatch(batchModel);
+      final result = await _batchLocalDataSource.updateBatch(batchModel);
       if (result) {
         return const Right(true);
       }
