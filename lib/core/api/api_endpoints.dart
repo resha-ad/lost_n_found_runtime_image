@@ -53,6 +53,8 @@ class ApiEndpoints {
   static const String items = '/items';
   static String itemById(String id) => '/items/$id';
   static String itemClaim(String id) => '/items/$id/claim';
+  static const String itemUploadPhoto = '/items/upload-photo';
+  static const String itemUploadVideo = '/items/upload-video';
 
   // ============ Comment Endpoints ============
   static const String comments = '/comments';

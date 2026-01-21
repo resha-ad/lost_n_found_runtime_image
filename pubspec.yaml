@@ -71,6 +71,8 @@ dev_dependencies:
 
   flutter_lints: ^6.0.0
 
+  flutter_launcher_icons: ^0.14.4
+
   # Code Generation
   build_runner: ^2.4.13
   json_serializable: ^6.8.0
@@ -105,3 +107,10 @@ flutter:
   assets:
     - assets/icons/
     - assets/svg/
+  
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: "AppIcon"
+  image_path: "assets/icons/icon.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true

@@ -138,10 +138,10 @@ class _ReportItemPageState extends ConsumerState<ReportItemPage> {
         _selectedMedia.add(photo);
         _selectedMediaType = 'photo';
       });
-      // Upload photo to server
-      // await ref
-      //     .read(itemViewModelProvider.notifier)
-      //     .uploadPhoto(File(photo.path));
+      //Upload photo to server
+      await ref
+          .read(itemViewModelProvider.notifier)
+          .uploadPhoto(File(photo.path));
     }
   }
 
@@ -160,9 +160,9 @@ class _ReportItemPageState extends ConsumerState<ReportItemPage> {
             _selectedMediaType = 'photo';
           });
           // Upload first photo to server
-          //   await ref
-          //       .read(itemViewModelProvider.notifier)
-          //       .uploadPhoto(File(images.first.path));
+          // await ref
+          //     .read(itemViewModelProvider.notifier)
+          //     .uploadPhoto(File(images.first.path));
         }
       } else {
         final XFile? image = await _imagePicker.pickImage(
@@ -177,9 +177,9 @@ class _ReportItemPageState extends ConsumerState<ReportItemPage> {
             _selectedMediaType = 'photo';
           });
           // Upload photo to server
-          //   await ref
-          //       .read(itemViewModelProvider.notifier)
-          //       .uploadPhoto(File(image.path));
+          await ref
+              .read(itemViewModelProvider.notifier)
+              .uploadPhoto(File(image.path));
         }
       }
     } catch (e) {
